@@ -1,78 +1,46 @@
-/**
- * Калькулятор прогнозирования развития анемии у женщин 
- * во 2-3 триместрах беременности
- * 
- * Формула: P = 1 / (1 + e^(-z))
- * где z = -0.74·X₁ - 0.565·X₂ - 0.078·X₃ - 5.724·X₄ + 53.1720
- * 
- * X₁ — MCH (пг)
- * X₂ — Гликопротеин 1b (нг/мл)
- * X₃ — NOX (мкмоль/л)
- * X — RBC-0 (×10¹²/л)
- * 
- * При P > 0.5 — прогнозируется анемия
- * При P ≤ 0.5 — прогнозируется отсутствие анемии
- * 
- * Чувствительность: 90.5%
- * Специфичность: 93.8%
- */
-
-// Константы формулы
+// Калькулятор прогнозирования развития анемии у женщин во 2-3 триместрах беременности
+ // Константы формулы
 const CONSTANTS = {
-    EULER: 2.71828182845904,  // число Эйлера (e)
-    INTERCEPT: 53.1720,       // свободный член
-    COEF_MCH: -0.74,          // коэффициент для X₁
-    COEF_GP1B: -0.565,        // коэффициент для X₂
-    COEF_NOX: -0.078,         // коэффициент для X₃
-    COEF_RBC: -5.724,         // коэффициент для X₄
-    THRESHOLD: 0.5            // пороговое значение P
-};
-
+    EULER: 2.71828182845904, 
+    INTERCEPT: 53.1720,     
+    COEF_MCH: -0.74,    
+    COEF_GP1B: -0.565,
+    COEF_NOX: -0.078,
+    COEF_RBC: -5.724, 
+    THRESHOLD: 0.5  };
 // Допустимые диапазоны значений для валидации
 const RANGES = {
-    mch: { min: 15, max: 40, name: 'MCH' },
+    mch: { min: 0, max: 100, name: 'MCH' },
     gp1b: { min: 0, max: 1000, name: 'Гликопротеин 1b' },
     nox: { min: 0, max: 500, name: 'NOX' },
-    rbc: { min: 2, max: 7, name: 'RBC-0' }
+    rbc: { min: 0, max: 100, name: 'RBC-0' }
 };
-
-/**
- * Основная функция расчёта
- */
 function calculate() {
-    // Сброс предыдущих ошибок
+// Сброс предыдущих ошибок
     clearErrors();
-    
     // Получение значений
     const mch = parseFloat(document.getElementById('mch').value);
     const gp1b = parseFloat(document.getElementById('gp1b').value);
     const nox = parseFloat(document.getElementById('nox').value);
     const rbc = parseFloat(document.getElementById('rbc').value);
-    
     // Валидация
     const errors = validateInputs(mch, gp1b, nox, rbc);
     if (errors.length > 0) {
         showErrors(errors);
-        return;
-    }
-    
-    // Расчёт линейного предиктора z
+        return;    }
+    // Расчёт z
     const z = CONSTANTS.COEF_MCH * mch +
               CONSTANTS.COEF_GP1B * gp1b +
               CONSTANTS.COEF_NOX * nox +
               CONSTANTS.COEF_RBC * rbc +
               CONSTANTS.INTERCEPT;
-    
-    // Расчёт вероятности P = 1 / (1 + e^(-z))
+        // Расчёт P
     const P = 1 / (1 + Math.pow(CONSTANTS.EULER, -z));
-    
     // Отображение результата
     displayResult(P, z);
 }
+// Валидация входных данных
 
-/**
- * Валидация входных данных
- */
 function validateInputs(mch, gp1b, nox, rbc) {
     const errors = [];
     
@@ -112,37 +80,26 @@ function validateInputs(mch, gp1b, nox, rbc) {
         });
     }
     
-    return errors;
-}
-
-/**
- * Отображение ошибок валидации
- */
+    return errors;}
+// Отображение ошибок валидации
 function showErrors(errors) {
     errors.forEach(err => {
         const input = document.getElementById(err.field);
         input.classList.add('error');
-        input.title = err.message;
-    });
-    
-    // Показать первую ошибку в alert
+        input.title = err.message;    });
+        // Показать первую ошибку в alert
     alert('Ошибка ввода:\n\n' + errors.map(e => '• ' + e.message).join('\n'));
 }
 
-/**
- * Сброс стилей ошибок
- */
+// Сброс стилей ошибок
 function clearErrors() {
     const inputs = document.querySelectorAll('input[type="number"]');
     inputs.forEach(input => {
         input.classList.remove('error');
         input.title = '';
-    });
-}
+    });}
 
-/**
- * Отображение результата расчёта
- */
+//Отображение результата 
 function displayResult(P, z) {
     const placeholder = document.getElementById('result');
     const content = document.getElementById('result-content');
@@ -155,7 +112,7 @@ function displayResult(P, z) {
     const probabilityValue = document.getElementById('probability-value');
     probabilityValue.textContent = P.toFixed(4);
     
-    // Цветовая индикация в зависимости от значения P
+   // Цвет в зависимости от значения P
     if (P > 0.7) {
         probabilityValue.style.color = '#dc2626';
     } else if (P > 0.5) {
@@ -163,13 +120,10 @@ function displayResult(P, z) {
     } else if (P > 0.3) {
         probabilityValue.style.color = '#ca8a04';
     } else {
-        probabilityValue.style.color = '#16a34a';
-    }
-    
-    // Линейный предиктор
+        probabilityValue.style.color = '#16a34a';}
+        // Линейный предиктор
     document.getElementById('z-value').textContent = z.toFixed(4);
-    
-    // Диагноз
+        // Диагноз
     const diagnosis = document.getElementById('diagnosis');
     const diagnosisIcon = document.getElementById('diagnosis-icon');
     const diagnosisText = document.getElementById('diagnosis-text');
@@ -202,9 +156,7 @@ function displayResult(P, z) {
     }
 }
 
-/**
- * Сброс формы
- */
+//Сброс 
 function resetForm() {
     // Очистка полей
     document.getElementById('mch').value = '';
@@ -232,5 +184,4 @@ document.addEventListener('DOMContentLoaded', function() {
                 calculate();
             }
         });
-    });
-});
+    });});
