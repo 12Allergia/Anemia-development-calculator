@@ -1,4 +1,4 @@
-{
+* {
     margin: 0;
     padding: 0;
     box-sizing: border-box;
@@ -189,7 +189,7 @@ button:active {
     background: #e2e8f0;
 }
 
-//Результат
+/* Результат */
 .result-placeholder {
     background: #f8fafc;
     border: 2px dashed #cbd5e1;
