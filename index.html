@@ -23,7 +23,7 @@
                         Среднее содержание гемоглобина в эритроците (MCH)                     
                     </label>
                     <div class="input-wrapper">
-                        <input type="number" id="mch" placeholder="Например: 28.5" step="0.1" min="15" max="40">
+                        <input type="number" id="mch" placeholder="Например: 28.5" step="0.1" min="0" max="100">
                         <span class="unit">пг</span>
                     </div>
                 </div>
@@ -31,8 +31,7 @@
                 <div class="form-group">
                     <label for="gp1b">
                         Концентрация гликопротеина 1b
-                        <span class="hint">X₂</span>
-                    </label>
+                     </label>
                     <div class="input-wrapper">
                         <input type="number" id="gp1b" placeholder="Например: 3.4" step="0.01" min="0">
                         <span class="unit">нг/мл</span>
@@ -42,8 +41,7 @@
                 <div class="form-group">
                     <label for="nox">
                         Концентрация суммарных нитратов и нитритов (NOX)
-                        <span class="hint">X₃</span>
-                    </label>
+                      </label>
                     <div class="input-wrapper">
                         <input type="number" id="nox" placeholder="Например: 60" step="0.1" min="0">
                         <span class="unit">мкмоль/л</span>
@@ -53,10 +51,9 @@
                 <div class="form-group">
                     <label for="rbc">
                         Количество эритроцитов, измеренное оптическим методом (RBC-0)
-                        <span class="hint">X₄</span>
-                    </label>
+                     </label>
                     <div class="input-wrapper">
-                        <input type="number" id="rbc" placeholder="Например: 4.2" step="0.01" min="2" max="7">
+                        <input type="number" id="rbc" placeholder="Например: 4.2" step="0.01" min="0" max="100">
                         <span class="unit">×10¹²/л</span>
                     </div>
                 </div>
@@ -108,20 +105,7 @@
                         </div>
                     </div>
                     
-                    <div class="formula-info">
-                        <details>
-                            <summary> Формула расчёта</summary>
-                            <div class="formula-text">
-                                <p><strong>P = 1 / (1 + e<sup>-z</sup>)</strong></p>
-                                <p>где <strong>z = -0.74·X₁ - 0.565·X₂ - 0.078·X₃ - 5.724·X + 53.1720</strong></p>
-                                <p class="formula-legend">
-                                    X₁ — MCH (пг)<br>
-                                    X₂ — Гликопротеин 1b (нг/мл)<br>
-                                    X₃ — NOX (мкмоль/л)<br>
-                                    X₄ — RBC-0 (×10¹²/л)<br>
-                                    e = 2.71828182845904 (число Эйлера)
-                                </p>
-                            </div>
+                        </div>
                         </details>
                     </div>
                 </div>
