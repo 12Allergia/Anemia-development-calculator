@@ -70,7 +70,7 @@ function showResult(z, p) {
 
     const note = document.createElement('span');
     note.className = 'diagnosis-note';
-    note.textContent = 'во II–III триместрах беременности';
+    note.textContent = ' во II–III триместрах беременности';
 
     $('diagnosis-text').replaceChildren(verdict, note);
 }
