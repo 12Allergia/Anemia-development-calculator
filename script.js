@@ -1,34 +1,25 @@
 'use strict';
-
-
 const INTERCEPT = 53.172;
 const THRESHOLD = 0.5;
-
 const FIELDS = [
-    { id: 'mch',  label: 'MCH',             unit: 'пг',       coef: -0.740, min: 15, max: 45  },
-    { id: 'gp1b', label: 'гликопротеин 1b', unit: 'нг/мл',    coef: -0.565, min: 0,  max: 200 },
-    { id: 'nox',  label: 'NOx',             unit: 'мкмоль/л', coef: -0.078, min: 0,  max: 300 },
-    { id: 'rbc',  label: 'RBC-0',           unit: '×10¹²/л',  coef: -5.724, min: 2,  max: 7   },
+    { id: 'mch',  label: 'MCH',             unit: 'пг',       coef: -0.740, min: 0, max: 300  },
+    { id: 'gp1b', label: 'гликопротеин 1b', unit: 'нг/мл',    coef: -0.565, min: 0,  max: 500 },
+    { id: 'nox',  label: 'NOx',             unit: 'мкмоль/л', coef: -0.078, min: 0,  max: 500 },
+    { id: 'rbc',  label: 'RBC-0',           unit: '×10¹²/л',  coef: -5.724, min: 0,  max: 100   },
 ];
-
-
 const RISK_LEVELS = [
     { from: 0.7, cls: 'risk-high' },
     { from: 0.5, cls: 'risk-elevated' },
     { from: 0.3, cls: 'risk-moderate' },
     { from: 0,   cls: 'risk-low' },
 ];
-
 const $ = id => document.getElementById(id);
-
 function readFields() {
     const values = {};
     const errors = {};
-
     for (const field of FIELDS) {
         const raw = $(field.id).value.trim();
         const x = Number(raw);
-
         if (raw === '') {
             errors[field.id] = `Укажите ${field.label}`;
         } else if (!Number.isFinite(x)) {
