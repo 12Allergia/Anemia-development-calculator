@@ -65,9 +65,7 @@ function showResult(z, p) {
 
     const anemia = p > THRESHOLD;
     $('diagnosis').className = anemia ? 'diagnosis anemia' : 'diagnosis no-anemia';
-    $('diagnosis-icon').textContent = anemia ? '!' : '✓';
-
-    const verdict = document.createElement('strong');
+      const verdict = document.createElement('strong');
     verdict.textContent = anemia ? 'Прогнозируется развитие анемии' : 'Анемия не прогнозируется';
 
     const note = document.createElement('span');
