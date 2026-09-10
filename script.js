@@ -1,150 +1,129 @@
-// Калькулятор прогнозирования развития анемии у женщин во 2-3 триместрах беременности
-const CONSTANTS = {
-    EULER: 2.71828182845904, 
-    INTERCEPT: 53.1720,     
-    COEF_MCH: -0.74,    
-    COEF_GP1B: -0.565,
-    COEF_NOX: -0.078,
-    COEF_RBC: -5.724, 
-    THRESHOLD: 0.5  };
-// Допустимые диапазоны
-const RANGES = {
-    mch: { min: 0, max: 100, name: 'MCH' },
-    gp1b: { min: 0, max: 1000, name: 'Гликопротеин 1b' },
-    nox: { min: 0, max: 500, name: 'NOX' },
-    rbc: { min: 0, max: 100, name: 'RBC-0' }
-};
+'use strict';
+
+
+const INTERCEPT = 53.172;
+const THRESHOLD = 0.5;
+
+const FIELDS = [
+    { id: 'mch',  label: 'MCH',             unit: 'пг',       coef: -0.740, min: 15, max: 45  },
+    { id: 'gp1b', label: 'гликопротеин 1b', unit: 'нг/мл',    coef: -0.565, min: 0,  max: 200 },
+    { id: 'nox',  label: 'NOx',             unit: 'мкмоль/л', coef: -0.078, min: 0,  max: 300 },
+    { id: 'rbc',  label: 'RBC-0',           unit: '×10¹²/л',  coef: -5.724, min: 2,  max: 7   },
+];
+
+
+const RISK_LEVELS = [
+    { from: 0.7, cls: 'risk-high' },
+    { from: 0.5, cls: 'risk-elevated' },
+    { from: 0.3, cls: 'risk-moderate' },
+    { from: 0,   cls: 'risk-low' },
+];
+
+const $ = id => document.getElementById(id);
+
+function readFields() {
+    const values = {};
+    const errors = {};
+
+    for (const field of FIELDS) {
+        const raw = $(field.id).value.trim();
+        const x = Number(raw);
+
+        if (raw === '') {
+            errors[field.id] = `Укажите ${field.label}`;
+        } else if (!Number.isFinite(x)) {
+            errors[field.id] = 'Введите число';
+        } else if (x < field.min || x > field.max) {
+            errors[field.id] = `Допустимо от ${field.min} до ${field.max} ${field.unit}`;
+        } else {
+            values[field.id] = x;
+        }
+    }
+
+    return { values, errors };
+}
+
+function predict(values) {
+    const z = FIELDS.reduce((sum, field) => sum + field.coef * values[field.id], INTERCEPT);
+    return { z, p: 1 / (1 + Math.exp(-z)) };
+}
+
+function setFieldError(field, message) {
+    const input = $(field.id);
+    input.classList.toggle('error', Boolean(message));
+    input.setAttribute('aria-invalid', message ? 'true' : 'false');
+
+    let hint = input.parentElement.querySelector('.field-error');
+    if (!hint) {
+        hint = document.createElement('p');
+        hint.className = 'field-error';
+        input.insertAdjacentElement('afterend', hint);
+    }
+    hint.textContent = message || '';
+}
+
+function showResult(z, p) {
+    $('result').style.display = 'none';
+    $('result-content').style.display = 'block';
+
+    const value = $('probability-value');
+    value.textContent = p.toFixed(3);
+    value.className = RISK_LEVELS.find(level => p >= level.from).cls;
+
+    $('z-value').textContent = z.toFixed(2);
+
+    const anemia = p > THRESHOLD;
+    $('diagnosis').className = anemia ? 'diagnosis anemia' : 'diagnosis no-anemia';
+    $('diagnosis-icon').textContent = anemia ? '!' : '✓';
+
+    const verdict = document.createElement('strong');
+    verdict.textContent = anemia ? 'Прогнозируется развитие анемии' : 'Анемия не прогнозируется';
+
+    const note = document.createElement('span');
+    note.className = 'diagnosis-note';
+    note.textContent = 'во II–III триместрах беременности';
+
+    $('diagnosis-text').replaceChildren(verdict, note);
+}
+
 function calculate() {
-clearErrors();
-// Получение значений
-    const mch = parseFloat(document.getElementById('mch').value);
-    const gp1b = parseFloat(document.getElementById('gp1b').value);
-    const nox = parseFloat(document.getElementById('nox').value);
-    const rbc = parseFloat(document.getElementById('rbc').value);
-    const errors = validateInputs(mch, gp1b, nox, rbc);
-    if (errors.length > 0) {
-        showErrors(errors);
-        return;    }
- // Расчёт z
-    const z = CONSTANTS.COEF_MCH * mch +
-  CONSTANTS.COEF_GP1B * gp1b +
-   CONSTANTS.COEF_NOX * nox +
- CONSTANTS.COEF_RBC * rbc +
-  CONSTANTS.INTERCEPT;
-// Расчёт P
-    const P = 1 / (1 + Math.pow(CONSTANTS.EULER, -z));
-displayResult(P, z);}
-// Валидация входных данных
-function validateInputs(mch, gp1b, nox, rbc) {
-    const errors = [];
-   if (isNaN(mch)) {
-   errors.push({ field: 'mch', message: 'Введите значение MCH' });
-    } else if (mch < RANGES.mch.min || mch > RANGES.mch.max) {
-        errors.push({ field: 'mch', 
- message: `MCH должен быть от ${RANGES.mch.min} до ${RANGES.mch.max} пг` 
-        });}
-        if (isNaN(gp1b)) {
-        errors.push({ field: 'gp1b', message: 'Введите концентрацию гликопротеина 1b' });
-    } else if (gp1b < RANGES.gp1b.min || gp1b > RANGES.gp1b.max) {
-        errors.push({ 
-            field: 'gp1b', 
- message: `Гликопротеин 1b должен быть от ${RANGES.gp1b.min} до ${RANGES.gp1b.max} нг/мл` 
-        });}
-    if (isNaN(nox)) {
-  errors.push({ field: 'nox', message: 'Введите концентрацию NOX' });
-    } else if (nox < RANGES.nox.min || nox > RANGES.nox.max) {
-        errors.push({ 
-   field: 'nox', 
-     message: `NOX должен быть от ${RANGES.nox.min} до ${RANGES.nox.max} мкмоль/л` 
-        });}
- if (isNaN(rbc)) {
-  errors.push({ field: 'rbc', message: 'Введите количество эритроцитов (RBC-0)' });
-    } else if (rbc < RANGES.rbc.min || rbc > RANGES.rbc.max) {
-        errors.push({ 
-   field: 'rbc', 
- message: `RBC-0 должен быть от ${RANGES.rbc.min} до ${RANGES.rbc.max} ×10¹²/л` 
-        });}
-        return errors;}
-// Отображение ошибок
-function showErrors(errors) {
-    errors.forEach(err => {
-        const input = document.getElementById(err.field);
-        input.classList.add('error');
-        input.title = err.message;    });
-        // Показать первую ошибку в alert
-    alert('Ошибка ввода:\n\n' + errors.map(e => '• ' + e.message).join('\n'));}
-// Сброс ошибок
-function clearErrors() {
-    const inputs = document.querySelectorAll('input[type="number"]');
-    inputs.forEach(input => {
-        input.classList.remove('error');
-        input.title = ''; });}
-//Результат
-function displayResult(P, z) {
-const placeholder = document.getElementById('result');
-const content = document.getElementById('result-content');
-// Скрыть placeholder, показать результат
-    placeholder.style.display = 'none';
-    content.style.display = 'block';
-// Значение P
-    const probabilityValue = document.getElementById('probability-value');
-    probabilityValue.textContent = P.toFixed(4);
-// Цвет в зависимости от P
-    if (P > 0.7) {
-        probabilityValue.style.color = '#dc2626';
-    } else if (P > 0.5) {
-        probabilityValue.style.color = '#ea580c';
-    } else if (P > 0.3) {
-        probabilityValue.style.color = '#ca8a04';
-    } else {
-        probabilityValue.style.color = '#16a34a';}
-// Линейный предиктор
-    document.getElementById('z-value').textContent = z.toFixed(4);
-  // Диагноз
-    const diagnosis = document.getElementById('diagnosis');
-    const diagnosisIcon = document.getElementById('diagnosis-icon');
-    const diagnosisText = document.getElementById('diagnosis-text');
- if (P > CONSTANTS.THRESHOLD) {
- // Прогноз
-        diagnosis.className = 'diagnosis anemia';
-        diagnosisIcon.textContent = '⚠️';
-        diagnosisText.innerHTML = `
-            <div>Прогнозируется РАЗВИТИЕ АНЕМИИ</div>
-            <div style="font-size: 13px; font-weight: 400; margin-top: 5px;">
-    во 2-3 триместрах беременности
-            </div>
-        `;
-    } else {
-diagnosis.className = 'diagnosis no-anemia';
-        diagnosisIcon.textContent = '✅';
-        diagnosisText.innerHTML = `
-            <div>Анемия НЕ прогнозируется</div>
-            <div style="font-size: 13px; font-weight: 400; margin-top: 5px;">
-                во 2-3 триместрах беременности
-            </div>`;}
-//Для мобильных
-    if (window.innerWidth < 850) {
-        content.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    }}
-//Сброс 
+    const { values, errors } = readFields();
+    FIELDS.forEach(field => setFieldError(field, errors[field.id]));
+
+    const invalid = FIELDS.find(field => errors[field.id]);
+    if (invalid) {
+        $(invalid.id).focus();
+        return;
+    }
+
+    const { z, p } = predict(values);
+    showResult(z, p);
+
+    if (window.matchMedia('(max-width: 850px)').matches) {
+        $('result-content').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+}
+
 function resetForm() {
-    // Очистка полей
-    document.getElementById('mch').value = '';
-    document.getElementById('gp1b').value = '';
-    document.getElementById('nox').value = '';
-    document.getElementById('rbc').value = '';
-// Сброс ошибок
-    clearErrors();
- // Возврат к placeholder
-    document.getElementById('result').style.display = 'flex';
-    document.getElementById('result-content').style.display = 'none';
-window.scrollTo({ top: 0, behavior: 'smooth' });}
-document.addEventListener('DOMContentLoaded', function() {
-    const inputs = document.querySelectorAll('input[type="number"]');
-    inputs.forEach(input => {
-        input.addEventListener('keypress', function(e) {
-            if (e.key === 'Enter') {
-                calculate();
-            }
+    for (const field of FIELDS) {
+        $(field.id).value = '';
+        setFieldError(field, '');
+    }
+
+    $('result').style.display = 'flex';
+    $('result-content').style.display = 'none';
+    $(FIELDS[0].id).focus();
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    for (const field of FIELDS) {
+        const input = $(field.id);
+        input.min = field.min;
+        input.max = field.max;
+
+        input.addEventListener('input', () => setFieldError(field, ''));
+        input.addEventListener('keydown', event => {
+            if (event.key === 'Enter') calculate();
         });
-    });});
+    }
+});
